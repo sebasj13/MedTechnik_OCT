@@ -1,0 +1,5 @@
+graft medizintechnik_oct/src/AzureTTK
+graft medizintechnik_oct/src/KDC101
+graft medizintechnik_oct/src/PyHantek
+graft medizintechnik_oct/src/images
+exclude __pychache__/
