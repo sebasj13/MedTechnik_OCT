@@ -5,6 +5,8 @@ import tkinter.ttk as ttk
 import usb
 from PIL import Image, ImageTk
 
+from ..PyHantek.pyhantek import DSO1062D
+
 
 class OsziConnect(ttk.Frame):
     def __init__(self, parent):
@@ -38,6 +40,7 @@ class OsziConnect(ttk.Frame):
                 self.statusbar.log.configure(
                     text="Oszilloskop erfolgreich gekoppelt!", fg="green"
                 )
+                self.parent.parent.osziframe.scope = DSO1062D(self.parent.parent.osc)
                 self.parent.parent.oszi_connected.set(2)
                 self.statusbar.set_status("oszi", 2)
 
@@ -75,11 +78,11 @@ class OsziConnect(ttk.Frame):
 
         except self.parent.parent.osc == None:
             self.statusbar.log.configure(
-                text="Fehler beim koppeln des Oszilloskops!", fg="red"
+                text="Fehler beim Koppeln des Oszilloskops!", fg="red"
             )
             return
         except Exception:
             self.statusbar.log.configure(
-                text="Fehler beim koppeln des Oszilloskops!", fg="red"
+                text="Fehler beim Koppeln des Oszilloskops!", fg="red"
             )
             return

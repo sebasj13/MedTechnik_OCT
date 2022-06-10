@@ -7,6 +7,6 @@ class HolderFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent.root)
         self.parent = parent
         self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
+        self.columnconfigure(0, minsize=399)
+        self.columnconfigure(1, minsize=2)
+        self.columnconfigure(2, minsize=399)

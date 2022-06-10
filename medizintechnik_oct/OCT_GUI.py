@@ -19,6 +19,7 @@ import os
 import threading
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 
 import usb
 from pylablib.devices import Thorlabs
@@ -60,6 +61,8 @@ class OCT_GUI:
             ),
         )
 
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         self.menubar = tk.Menu(self.root, tearoff=False)
 
         self.connectmenu = tk.Menu(self.menubar, tearoff=False)
@@ -82,14 +85,15 @@ class OCT_GUI:
 
         self.frame_left = OsziConnect(self.frame)
         self.frame_right = MotorConnect(self.frame)
-        self.seperator = tk.Canvas(self.frame, bg="black", height=1000, width=1)
+        self.seperator = tk.Canvas(self.frame, bg="black", height=300, width=2)
         self.frame_left.grid(row=0, column=0, sticky=tk.NW)
-        self.seperator.grid(row=0, column=1, sticky=tk.NW)
-        self.frame_right.grid(row=0, column=1, sticky=tk.NW)
+        self.frame_right.grid(row=0, column=2, sticky=tk.NW)
+        self.seperator.grid(row=0, column=1, sticky=tk.N)
+
         self.frame.grid(row=0)
 
-        self.osziframe = OsziControl(self)
-        self.motorframe = MotorControl(self)
+        self.osziframe = OsziControl(self.frame)
+        self.motorframe = MotorControl(self.frame)
 
         self.oszi_connected = tk.DoubleVar(value=0)
         self.axial_motor_connected = tk.DoubleVar(value=0)
@@ -190,16 +194,66 @@ class OCT_GUI:
             self.statusbar.set_status("transversal_motor", 0)
             self.root.after(1000, lambda: self.connection_status())
             self.frame_right.button.configure(state=tk.DISABLED)
+
             return
 
         self.frame_right.button.configure(state=tk.NORMAL)
+
+        if (
+            len(motors) == 2
+            and (
+                self.axial_motor_connected.get() == 2
+                and self.transversal_motor_connected.get() == 1
+            )
+        ) or (
+            len(motors) == 2
+            and (
+                self.axial_motor_connected.get() == 1
+                and self.transversal_motor_connected.get() == 2
+            )
+        ):
+            if self.motorframe.winfo_ismapped():
+                if self.axial_motor_connected.get() == 1:
+                    try:
+                        self.axial_motor = Thorlabs.KinesisMotor(
+                            "27003287", scale="stage"
+                        )
+                        self.statusbar.log.configure(
+                            text="Axialer Motor wieder gekoppelt", fg="green"
+                        )
+                        self.statusbar.set_status("axial_motor", 2)
+                        self.axial_motor_connected.set(2)
+                        self.axial_motor_log = self.axial_motor_connected.get()
+                    except Exception:
+                        self.statusbar.log.configure(
+                            text="Erneutes koppeln fehlgeschlagen!", fg="red"
+                        )
+                elif self.transversal_motor_connected.get() == 1:
+                    try:
+                        self.transversal_motor = Thorlabs.KinesisMotor(
+                            "27001138", scale="stage"
+                        )
+                        self.statusbar.log.configure(
+                            text="Transversaler Motor wieder gekoppelt", fg="green"
+                        )
+                        self.statusbar.set_status("transversal_motor", 2)
+                        self.transversal_motor_connected.set(2)
+                        self.transversal_motor_log = (
+                            self.transversal_motor_connected.get()
+                        )
+                    except Exception:
+                        self.statusbar.log.configure(
+                            text="Erneutes koppeln fehlgeschlagen!", fg="red"
+                        )
+            self.root.after(1000, lambda: self.connection_status())
+            return
 
         for motor in motors:
             if motor[0] == "27003287":
                 if self.axial_motor_connected.get() == 2:
                     if not self.motorframe.winfo_ismapped():
                         self.frame_right.grid_forget()
-                        self.motorframe.grid(row=0, column=1, sticky=tk.NW)
+                        self.motorframe.grid(row=0, column=2, sticky=tk.NW)
                 else:
                     self.axial_motor_connected.set(1)
                     if self.statusbar.log.cget("text") != "Axialer Motor verbunden!":
@@ -211,6 +265,7 @@ class OCT_GUI:
                     self.axial_motor_log = self.axial_motor_connected.get()
                     self.statusbar.set_status("axial_motor", 1)
                     self.frame_right.button.configure(state=tk.NORMAL)
+
                 if len(motors) == 1:
                     if self.transversal_motor_connected.get() != 0:
                         self.transversal_motor_connected.set(0)
@@ -234,7 +289,7 @@ class OCT_GUI:
                     if self.axial_motor_connected.get() == 2:
                         if not self.motorframe.winfo_ismapped():
                             self.frame_right.grid_forget()
-                            self.motorframe.grid(row=0, column=1, sticky=tk.NW)
+                            self.motorframe.grid(row=0, column=2, sticky=tk.NW)
                 else:
                     self.transversal_motor_connected.set(1)
                     if (
@@ -273,10 +328,19 @@ class OCT_GUI:
             self.frame_right.button.configure(state=tk.DISABLED)
             if not self.motorframe.winfo_ismapped():
                 self.frame_right.grid_forget()
-                self.motorframe.grid(row=0, column=1, sticky=tk.NW)
+                self.motorframe.grid(row=0, column=2, sticky=tk.NW)
 
         self.root.after(1000, lambda: self.connection_status())
         return
+
+    def on_closing(self):
+        if messagebox.askokcancel("Schließen", "Fenster schließen?"):
+            try:
+                self.axial_motor.close()
+                self.transversal_motor.close()
+            except Exception:
+                pass
+            self.root.destroy()
 
     def mainloop(self):
         self.root.mainloop()

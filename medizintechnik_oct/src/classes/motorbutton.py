@@ -49,7 +49,7 @@ class MotorConnect(ttk.Frame):
                 and self.parent.parent.transversal_motor == None
             ):
                 self.statusbar.log.configure(
-                    text="Fehler beim koppeln der Motoren!", fg="red"
+                    text="Fehler beim Koppeln der Motoren!", fg="red"
                 )
             elif self.parent.parent.axial_motor == None:
                 self.statusbar.log.configure(
