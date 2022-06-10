@@ -1,0 +1,9 @@
+[submodule "medizintechnik_oct/src/KDC101"]
+	path = medizintechnik_oct/src/KDC101
+	url = https://github.com/sebasj13/KDC101RasterScan
+[submodule "medizintechnik_oct/src/PyHantek"]
+	path = medizintechnik_oct/src/PyHantek
+	url = https://github.com/sebasj13/PyHantek
+[submodule "medizintechnik_oct/src/AzureTTK"]
+	path = medizintechnik_oct/src/AzureTTK
+	url = https://github.com/rdbende/Azure-ttk-theme
