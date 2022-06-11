@@ -1,8 +1,9 @@
-import threading
 import tkinter as tk
 import tkinter.ttk as ttk
 
-from ..KDC101.rasterscan import RasterScan
+import numpy as np
+
+from ..KDC101.rasterscan import ramp_arrays
 
 
 class MotorControl(ttk.Frame):
@@ -106,19 +107,46 @@ class MotorControl(ttk.Frame):
             self.parent.transversal_motor.move_to(float(self.motor2entry.get()))
 
     def ramp(self):
+        def three():
+            self.parent.statusbar.pb.grid_forget()
+            self.parent.statusbar.log.configure(
+                text="Rasterscan abgeschlossen!", fg="green"
+            )
+            self.parent.statusbar.log.grid(row=0, column=6, sticky=tk.W)
+            self.parent.statusbar.pb["value"] = 0
+            self.parent.statusbar.pb.configure(mode="indeterminate")
+            return
+
+        def two(axial, transversal):
+
+            self.parent.statusbar.log.grid_forget()
+            self.parent.statusbar.pb.configure(mode="determinate")
+            self.parent.statusbar.pb.grid(row=0, column=6, sticky=tk.W)
+
+            for i in range(len(axial)):
+                self.parent.axial_motor.move_to(axial[i] + start[0])
+                self.parent.transversal_motor.move_to(transversal[i] + start[1])
+                self.parent.axial_motor.wait_for_stop()
+                self.parent.transversal_motor.wait_for_stop()
+                data = self.parent.osc.ReadScaledSampleData()
+                np.savetxt(f"{i}.txt", np.transpose([data[0], data[1]]))
+                self.parent.statusbar.pb["value"] += 100 / len(axial)
+                self.parent.root.update_idletasks()
+
+            self.after(1000, three)
 
         cols = int(self.colentry.get())
         colstep = float(self.colstepentry.get())
         rows = int(self.rowentry.get())
         rowstep = float(self.rowstepentry.get())
+        start = (
+            self.parent.axial_motor.get_position(),
+            self.parent.transversal_motor.get_position(),
+        )
 
-        threading.Thread(
-            target=lambda: RasterScan(
-                self.parent.axial_motor,
-                self.parent.transversal_motor,
-                cols,
-                rows,
-                colstep,
-                rowstep,
-            )
-        ).start()
+        axial, transversal = ramp_arrays(cols, rows)
+        axial, transversal = axial * colstep, transversal * rowstep
+
+        self.parent.statusbar.log.configure(f"Fahre {cols}x{rows} Rampe ...")
+        self.after(1000, lambda: two(axial, transversal))
+
