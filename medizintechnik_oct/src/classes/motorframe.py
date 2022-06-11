@@ -147,6 +147,6 @@ class MotorControl(ttk.Frame):
         axial, transversal = ramp_arrays(cols, rows)
         axial, transversal = axial * colstep, transversal * rowstep
 
-        self.parent.statusbar.log.configure(f"Fahre {cols}x{rows} Rampe ...")
+        self.parent.statusbar.log.configure(text=f"Fahre {cols}x{rows} Rampe ...")
         self.after(1000, lambda: two(axial, transversal))
 
