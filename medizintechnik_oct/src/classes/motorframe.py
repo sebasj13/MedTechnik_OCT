@@ -157,6 +157,11 @@ class MotorControl(ttk.Frame):
             folder_selected = filedialog.askdirectory(initialdir=desktop)
 
         def three():
+            try:
+                self.parent.axial_motor.move_to(start[0])
+                self.parent.transversal_motor.move_to(start[1])
+            except Exception:
+                pass
             self.parent.statusbar.pb.grid_forget()
             self.parent.statusbar.log.configure(
                 text="Rasterscan abgeschlossen!", fg="green"
