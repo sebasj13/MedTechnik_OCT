@@ -1,7 +1,8 @@
+import os
+import threading
 import tkinter as tk
 import tkinter.ttk as ttk
-from re import A
-from xml.dom.minidom import Attr
+from tkinter import filedialog
 
 import numpy as np
 
@@ -26,9 +27,9 @@ class MotorControl(ttk.Frame):
             self, text="Einfahren", command=lambda: self.jog(1, 0)
         )
         self.stop1 = ttk.Button(self, text="Stop", command=lambda: self.stop(1))
-        self.motor1entry = ttk.Entry(self, width=9)
+        self.motor1entry = ttk.Entry(self, width=10)
         self.motor1move = ttk.Button(
-            self, text="Anfahren", command=lambda: self.move_to(1)
+            self, text="Anfahren  [mm]:", command=lambda: self.move_to(1)
         )
 
         self.home1.grid(pady=2, row=1, column=0, columnspan=2, sticky=tk.N)
@@ -44,9 +45,9 @@ class MotorControl(ttk.Frame):
             self, text="Einfahren", command=lambda: self.jog(2, 0)
         )
         self.stop2 = ttk.Button(self, text="Stop", command=lambda: self.stop(2))
-        self.motor2entry = ttk.Entry(self, width=9)
+        self.motor2entry = ttk.Entry(self, width=10)
         self.motor2move = ttk.Button(
-            self, text="Anfahren", command=lambda: self.move_to(2)
+            self, text="Anfahren [mm]:", command=lambda: self.move_to(2)
         )
 
         self.home2.grid(pady=2, row=1, column=2, columnspan=2, sticky=tk.N)
@@ -59,28 +60,59 @@ class MotorControl(ttk.Frame):
         self.seperator = tk.Canvas(self, bg="black", height=2, width=390)
         self.seperator.grid(row=6, column=0, columnspan=4, pady=(20, 0))
 
-        self.collabel = ttk.Label(self, text="Spalten:")
-        self.colsteplabel = ttk.Label(self, text="Schrittweilte (S):")
         self.rowlabel = ttk.Label(self, text="Zeilen:")
-        self.rowsteplabel = ttk.Label(self, text="Schrittweilte (Z):")
+        self.rowsteplabel = ttk.Label(self, text="Schrittweite [mm]:")
+        self.collabel = ttk.Label(self, text="Spalten:")
+        self.colsteplabel = ttk.Label(self, text="Schrittweite [mm]:")
 
-        self.rowlabel.grid(sticky=tk.N, row=7, column=2)
-        self.rowsteplabel.grid(sticky=tk.N, row=7, column=3)
-        self.collabel.grid(sticky=tk.N, row=7, column=0)
-        self.colsteplabel.grid(sticky=tk.N, row=7, column=1)
+        self.rowlabel.grid(sticky=tk.N, row=7, column=0)
+        self.rowsteplabel.grid(sticky=tk.N, row=7, column=1)
+        self.collabel.grid(sticky=tk.N, row=7, column=2)
+        self.colsteplabel.grid(sticky=tk.N, row=7, column=3)
 
         self.rowentry = ttk.Entry(self, width=9)
         self.rowstepentry = ttk.Entry(self, width=9)
         self.colentry = ttk.Entry(self, width=9)
         self.colstepentry = ttk.Entry(self, width=9)
 
-        self.colentry.grid(sticky=tk.N, row=8, column=2)
-        self.rowstepentry.grid(sticky=tk.N, row=8, column=3)
         self.rowentry.grid(sticky=tk.N, row=8, column=0)
-        self.colstepentry.grid(sticky=tk.N, row=8, column=1)
+        self.rowstepentry.grid(sticky=tk.N, row=8, column=1)
+        self.colentry.grid(sticky=tk.N, row=8, column=2)
+        self.colstepentry.grid(sticky=tk.N, row=8, column=3)
 
-        self.rampbutton = ttk.Button(self, text="Raster", command=self.ramp)
-        self.rampbutton.grid(sticky=tk.N, row=9, columnspan=2, column=1, pady=10)
+        self.savevar = tk.BooleanVar(self)
+        self.savevar.set(False)
+        self.savebutton = ttk.Checkbutton(
+            self, variable=self.savevar, text="Speichern?", command=self.save
+        )
+        self.savebutton.grid(row=9, column=2)
+        self.rampbutton = ttk.Button(
+            self,
+            text="Raster",
+            command=lambda: threading.Thread(target=self.ramp).start(),
+        )
+        self.rampbutton.grid(sticky=tk.N, row=9, columnspan=2, column=0, pady=10)
+        self.channelvar = tk.BooleanVar(self)
+        self.channelvar.set(False)
+        self.channeldict = {False: 1, True: 2}
+        self.channeltext = tk.StringVar(self)
+        self.channeltext.set(f"Kanal {self.channeldict[self.channelvar.get()]}")
+        self.channelbutton = ttk.Button(
+            self, text=self.channeltext.get(), command=self.channel
+        )
+        self.channelbutton.grid(row=9, column=3)
+
+    def save(self):
+        if self.parent.osziframe.scope == None:
+            self.savevar.set(False)
+            self.parent.statusbar.log.configure(
+                text="Osziloskop nicht angeschlossen!", fg="red"
+            )
+
+    def channel(self):
+        self.channelvar.set(not self.channelvar.get())
+        self.channeltext.set(f"Kanal {self.channeldict[self.channelvar.get()]}")
+        self.channelbutton.configure(text=self.channeltext.get())
 
     def home(self, motor):
         if motor == 1:
@@ -103,12 +135,27 @@ class MotorControl(ttk.Frame):
     def move_to(self, motor):
 
         if motor == 1:
-            self.parent.axial_motor.move_to(float(self.motor1entry.get()))
+            self.parent.axial_motor.move_to(float(self.motor1entry.get()) / 1000)
 
         else:
-            self.parent.transversal_motor.move_to(float(self.motor2entry.get()))
+            self.parent.transversal_motor.move_to(float(self.motor2entry.get()) / 1000)
 
     def ramp(self):
+
+        try:
+            if (
+                self.parent.axial_motor == None
+                and self.parent.transversal_motor == None
+            ):
+                return
+        except Exception as e:
+            print(e)
+            return
+
+        if self.savevar.get() == True:
+            desktop = os.path.join(os.path.join(os.environ["USERPROFILE"]), "Desktop")
+            folder_selected = filedialog.askdirectory(initialdir=desktop)
+
         def three():
             self.parent.statusbar.pb.grid_forget()
             self.parent.statusbar.log.configure(
@@ -119,33 +166,47 @@ class MotorControl(ttk.Frame):
             self.parent.statusbar.pb.configure(mode="indeterminate")
             return
 
-        def two(axial, transversal):
+        def two(axial, transversal, cols, rows):
 
             self.parent.statusbar.log.grid_forget()
             self.parent.statusbar.pb.configure(mode="determinate")
             self.parent.statusbar.pb.grid(row=0, column=6, sticky=tk.W)
+            try:
+                header = f"Kanal {self.channeldict[self.channelvar.get()]}\nZeit in {self.parent.osziframe.scope.timebase_unit}\nAmplitude in {self.parent.osziframe.scope.CH1.volts_per_div_unit}"
+            except Exception:
+                header = ""
 
             for i in range(len(axial)):
                 try:
                     self.parent.axial_motor.move_to(axial[i] + start[0])
-                except AttributeError:
+                except Exception:
                     pass
                 try:
                     self.parent.transversal_motor.move_to(transversal[i] + start[1])
-                except AttributeError:
+                except Exception:
                     pass
                 try:
                     self.parent.axial_motor.wait_for_stop()
-                except AttributeError:
+                except Exception:
                     pass
                 try:
                     self.parent.transversal_motor.wait_for_stop()
-                except AttributeError:
+                except Exception:
                     pass
                 try:
-                    data = self.parent.osc.ReadScaledSampleData()
-                    # np.savetxt(f"{i}.txt", np.transpose([data[0], data[1]]))
-                except AttributeError:
+                    if self.savevar.get() == True:
+                        data = self.parent.osziframe.scope.ReadScaledSampleData(
+                            self.channeldict[self.channelvar.get()]
+                        )
+                        np.savetxt(
+                            os.path.join(
+                                folder_selected, f"{rows}x{cols}_Rasterscan_{i}.txt"
+                            ),
+                            np.transpose([data[0], data[1]]),
+                            fmt="%10.5f",
+                            header=header,
+                        )
+                except Exception as e:
                     pass
                 self.parent.statusbar.pb["value"] += 100 / len(axial)
                 self.parent.root.update_idletasks()
@@ -153,24 +214,24 @@ class MotorControl(ttk.Frame):
             self.after(1000, three)
 
         cols = int(self.colentry.get())
-        colstep = float(self.colstepentry.get())
+        colstep = float(self.colstepentry.get()) / 1000
         rows = int(self.rowentry.get())
-        rowstep = float(self.rowstepentry.get())
+        rowstep = float(self.rowstepentry.get()) / 1000
         start = [0, 0]
         try:
             start[0] = self.parent.axial_motor.get_position()
-        except AttributeError:
+        except Exception:
             pass
         try:
             start[1] = self.parent.transversal_motor.get_position()
-        except AttributeError:
+        except Exception:
             pass
 
         axial, transversal = ramp_arrays(cols, rows)
-        axial, transversal = axial * colstep, transversal * rowstep
+        axial, transversal = axial * rowstep, transversal * colstep
 
         self.parent.statusbar.log.configure(
             text=f"Fahre {cols}x{rows} Rampe ...", fg="black"
         )
-        self.after(1000, lambda: two(axial, transversal))
+        self.after(1000, lambda: two(axial, transversal, cols, rows))
 

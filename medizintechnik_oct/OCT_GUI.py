@@ -63,18 +63,6 @@ class OCT_GUI:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        self.menubar = tk.Menu(self.root, tearoff=False)
-
-        self.connectmenu = tk.Menu(self.menubar, tearoff=False)
-        self.connectmenu.add_command(
-            label="Verbinden", command=lambda: print("Verbinden")
-        )
-
-        self.menubar.add_cascade(label="Verbinden", menu=self.connectmenu)
-        self.menubar.add_command(label="Status", command=self.switch)
-
-        self.root.config(menu=self.menubar)
-
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
@@ -128,8 +116,8 @@ class OCT_GUI:
                 if isinstance(widget, ttk.Button):
                     widget.configure(state=statedict[state])
 
-        posentry = self.motorframe.grid_slaves(row=8)[0 + columndict[column]]
-        stepentry = self.motorframe.grid_slaves(row=8)[1 + columndict[column]]
+        posentry = self.motorframe.grid_slaves(row=8)[2 - columndict[column]]
+        stepentry = self.motorframe.grid_slaves(row=8)[3 - columndict[column]]
         if state == False:
             posentry.delete(0, tk.END)
             stepentry.delete(0, tk.END)
