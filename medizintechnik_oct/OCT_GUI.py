@@ -19,7 +19,7 @@ import os
 import threading
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import messagebox
+from tkinter import DISABLED, messagebox
 
 import usb
 from pylablib.devices import Thorlabs
@@ -117,6 +117,34 @@ class OCT_GUI:
             self.statusbar.log.grid_forget()
             self.statusbar.pb.grid(row=0, column=6, sticky=tk.W)
 
+    def button_state(self, column, state):
+
+        columndict = {"axial": 0, "transversal": 2}
+        statedict = {False: tk.DISABLED, True: tk.NORMAL}
+        for row in [0, 1, 2, 3, 4, 5]:
+            for widget in self.motorframe.grid_slaves(
+                column=columndict[column], row=row
+            ):
+                if isinstance(widget, ttk.Button):
+                    widget.configure(state=statedict[state])
+
+        posentry = self.motorframe.grid_slaves(row=8)[0 + columndict[column]]
+        stepentry = self.motorframe.grid_slaves(row=8)[1 + columndict[column]]
+        if state == False:
+            posentry.delete(0, tk.END)
+            stepentry.delete(0, tk.END)
+            posentry.insert(0, 1)
+            stepentry.insert(0, 1)
+            posentry.config(state=tk.DISABLED)
+            stepentry.config(state=tk.DISABLED)
+        else:
+            posentry.config(state=tk.NORMAL)
+            stepentry.config(state=tk.NORMAL)
+            posentry.delete(0, tk.END)
+            stepentry.delete(0, tk.END)
+
+        return
+
     def connection_status(self):
 
         oszi = usb.core.find(idVendor=1183, idProduct=20570)
@@ -164,7 +192,7 @@ class OCT_GUI:
         if motors == []:
             if self.motorframe.winfo_ismapped():
                 self.motorframe.grid_forget()
-                self.frame_right.grid(row=0, column=1, sticky=tk.NW)
+                self.frame_right.grid(row=0, column=2, sticky=tk.NW)
             self.axial_motor = None
             self.transversal_motor = None
             self.axial_motor_connected.set(0)
@@ -195,6 +223,9 @@ class OCT_GUI:
             self.root.after(1000, lambda: self.connection_status())
             self.frame_right.button.configure(state=tk.DISABLED)
 
+            self.button_state("axial", False)
+            self.button_state("transversal", False)
+
             return
 
         self.frame_right.button.configure(state=tk.NORMAL)
@@ -224,6 +255,8 @@ class OCT_GUI:
                         self.statusbar.set_status("axial_motor", 2)
                         self.axial_motor_connected.set(2)
                         self.axial_motor_log = self.axial_motor_connected.get()
+                        self.button_state("axial", True)
+
                     except Exception:
                         self.statusbar.log.configure(
                             text="Erneutes koppeln fehlgeschlagen!", fg="red"
@@ -241,6 +274,7 @@ class OCT_GUI:
                         self.transversal_motor_log = (
                             self.transversal_motor_connected.get()
                         )
+                        self.button_state("transversal", True)
                     except Exception:
                         self.statusbar.log.configure(
                             text="Erneutes koppeln fehlgeschlagen!", fg="red"
@@ -254,6 +288,7 @@ class OCT_GUI:
                     if not self.motorframe.winfo_ismapped():
                         self.frame_right.grid_forget()
                         self.motorframe.grid(row=0, column=2, sticky=tk.NW)
+                        self.button_state("axial", True)
                 else:
                     self.axial_motor_connected.set(1)
                     if self.statusbar.log.cget("text") != "Axialer Motor verbunden!":
@@ -265,6 +300,7 @@ class OCT_GUI:
                     self.axial_motor_log = self.axial_motor_connected.get()
                     self.statusbar.set_status("axial_motor", 1)
                     self.frame_right.button.configure(state=tk.NORMAL)
+                    self.button_state("axial", False)
 
                 if len(motors) == 1:
                     if self.transversal_motor_connected.get() != 0:
@@ -284,12 +320,14 @@ class OCT_GUI:
                     self.transversal_motor = None
                     self.transversal_motor_log = self.transversal_motor_connected.get()
                     self.statusbar.set_status("transversal_motor", 0)
+                    self.button_state("transversal", False)
             elif motor[0] == "27001138":
                 if self.transversal_motor_connected.get() == 2:
                     if self.axial_motor_connected.get() == 2:
                         if not self.motorframe.winfo_ismapped():
                             self.frame_right.grid_forget()
                             self.motorframe.grid(row=0, column=2, sticky=tk.NW)
+                            self.button_state("transversal", True)
                 else:
                     self.transversal_motor_connected.set(1)
                     if (
@@ -307,6 +345,7 @@ class OCT_GUI:
                     self.transversal_motor_log = self.transversal_motor_connected.get()
                     self.statusbar.set_status("transversal_motor", 1)
                     self.frame_right.button.configure(state=tk.NORMAL)
+                    self.button_state("transversal", False)
                 if len(motors) == 1:
                     if self.axial_motor_connected.get() != 0:
                         self.axial_motor_connected.set(0)
@@ -319,6 +358,7 @@ class OCT_GUI:
                     self.axial_motor == None
                     self.axial_motor_log = self.axial_motor_connected.get()
                     self.statusbar.set_status("axial_motor", 0)
+                    self.button_state("axial", False)
 
         if (
             len(motors) == 2
@@ -329,6 +369,8 @@ class OCT_GUI:
             if not self.motorframe.winfo_ismapped():
                 self.frame_right.grid_forget()
                 self.motorframe.grid(row=0, column=2, sticky=tk.NW)
+                self.button_state("axial", True)
+                self.button_state("transversal", True)
 
         self.root.after(1000, lambda: self.connection_status())
         return

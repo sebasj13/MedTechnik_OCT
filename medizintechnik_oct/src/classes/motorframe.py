@@ -1,5 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from re import A
+from xml.dom.minidom import Attr
 
 import numpy as np
 
@@ -62,20 +64,20 @@ class MotorControl(ttk.Frame):
         self.rowlabel = ttk.Label(self, text="Zeilen:")
         self.rowsteplabel = ttk.Label(self, text="Schrittweilte (Z):")
 
-        self.collabel.grid(sticky=tk.N, row=7, column=0)
-        self.colsteplabel.grid(sticky=tk.N, row=7, column=1)
         self.rowlabel.grid(sticky=tk.N, row=7, column=2)
         self.rowsteplabel.grid(sticky=tk.N, row=7, column=3)
+        self.collabel.grid(sticky=tk.N, row=7, column=0)
+        self.colsteplabel.grid(sticky=tk.N, row=7, column=1)
 
-        self.colentry = ttk.Entry(self, width=9)
-        self.colstepentry = ttk.Entry(self, width=9)
         self.rowentry = ttk.Entry(self, width=9)
         self.rowstepentry = ttk.Entry(self, width=9)
+        self.colentry = ttk.Entry(self, width=9)
+        self.colstepentry = ttk.Entry(self, width=9)
 
-        self.colentry.grid(sticky=tk.N, row=8, column=0)
-        self.colstepentry.grid(sticky=tk.N, row=8, column=1)
-        self.rowentry.grid(sticky=tk.N, row=8, column=2)
+        self.colentry.grid(sticky=tk.N, row=8, column=2)
         self.rowstepentry.grid(sticky=tk.N, row=8, column=3)
+        self.rowentry.grid(sticky=tk.N, row=8, column=0)
+        self.colstepentry.grid(sticky=tk.N, row=8, column=1)
 
         self.rampbutton = ttk.Button(self, text="Raster", command=self.ramp)
         self.rampbutton.grid(sticky=tk.N, row=9, columnspan=2, column=1, pady=10)
@@ -124,12 +126,27 @@ class MotorControl(ttk.Frame):
             self.parent.statusbar.pb.grid(row=0, column=6, sticky=tk.W)
 
             for i in range(len(axial)):
-                self.parent.axial_motor.move_to(axial[i] + start[0])
-                self.parent.transversal_motor.move_to(transversal[i] + start[1])
-                self.parent.axial_motor.wait_for_stop()
-                self.parent.transversal_motor.wait_for_stop()
-                data = self.parent.osc.ReadScaledSampleData()
-                np.savetxt(f"{i}.txt", np.transpose([data[0], data[1]]))
+                try:
+                    self.parent.axial_motor.move_to(axial[i] + start[0])
+                except AttributeError:
+                    pass
+                try:
+                    self.parent.transversal_motor.move_to(transversal[i] + start[1])
+                except AttributeError:
+                    pass
+                try:
+                    self.parent.axial_motor.wait_for_stop()
+                except AttributeError:
+                    pass
+                try:
+                    self.parent.transversal_motor.wait_for_stop()
+                except AttributeError:
+                    pass
+                try:
+                    data = self.parent.osc.ReadScaledSampleData()
+                    # np.savetxt(f"{i}.txt", np.transpose([data[0], data[1]]))
+                except AttributeError:
+                    pass
                 self.parent.statusbar.pb["value"] += 100 / len(axial)
                 self.parent.root.update_idletasks()
 
@@ -139,14 +156,21 @@ class MotorControl(ttk.Frame):
         colstep = float(self.colstepentry.get())
         rows = int(self.rowentry.get())
         rowstep = float(self.rowstepentry.get())
-        start = (
-            self.parent.axial_motor.get_position(),
-            self.parent.transversal_motor.get_position(),
-        )
+        start = [0, 0]
+        try:
+            start[0] = self.parent.axial_motor.get_position()
+        except AttributeError:
+            pass
+        try:
+            start[1] = self.parent.transversal_motor.get_position()
+        except AttributeError:
+            pass
 
         axial, transversal = ramp_arrays(cols, rows)
         axial, transversal = axial * colstep, transversal * rowstep
 
-        self.parent.statusbar.log.configure(text=f"Fahre {cols}x{rows} Rampe ...")
+        self.parent.statusbar.log.configure(
+            text=f"Fahre {cols}x{rows} Rampe ...", fg="black"
+        )
         self.after(1000, lambda: two(axial, transversal))
 
