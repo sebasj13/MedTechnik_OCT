@@ -2,6 +2,7 @@ import threading
 import tkinter as tk
 import tkinter.ttk as ttk
 
+import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
@@ -17,13 +18,13 @@ class OsziControl(ttk.Frame):
         self.startbutton.grid(row=0, column=0, sticky=tk.W)
         self.lockbutton = ttk.Button(self, text="Sperren", command=self.lock)
         self.lockbutton.grid(row=1, column=0, sticky=tk.W)
-        self.previewbutton1 = ttk.Button(
-            self, text="Kanal 1", command=lambda: self.preview(1)
-        )
+        self.plot1 = tk.BooleanVar()
+        self.plot1.set(False)
+        self.plot2 = tk.BooleanVar()
+        self.plot2.set(False)
+        self.previewbutton1 = ttk.Checkbutton(self, text="Kanal 1", variable=self.plot1)
         self.previewbutton1.grid(row=2, column=0, sticky=tk.W)
-        self.previewbutton2 = ttk.Button(
-            self, text="Kanal 2", command=lambda: self.preview(2)
-        )
+        self.previewbutton2 = ttk.Checkbutton(self, text="Kanal 2", variable=self.plot2)
         self.previewbutton2.grid(row=3, column=0, sticky=tk.W)
         self.screenshotbutton = ttk.Button(
             self, text="Screenshot", command=self.screenshot
@@ -38,7 +39,11 @@ class OsziControl(ttk.Frame):
         self.toolbarFrame = tk.Frame(master=self)
         self.toolbarFrame.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10)
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbarFrame)
-        # self.ax.set_title("Vorschau")
+        self.toolbar.update()
+
+        self.animation = animation.FuncAnimation(
+            self.figure, self.preview, interval=500
+        )
 
     def start(self):
 
@@ -65,22 +70,36 @@ class OsziControl(ttk.Frame):
             self.scope.UnLockControlPanel()
             self.lockbutton.configure(text="Sperren")
 
-    def preview(self, channel):
+    def preview(self):
 
-        self.ax.clear()
-        color = {1: "yellow", 2: "blue"}
-        ch_data = self.scope.ReadScaledSampleData(channel)
-        unit = getattr(self.scope, f"CH{channel}").volts_per_div_unit
-        self.ax.set_xlabel(f"{self.scope.timebase_unit}", x=0.9, y=-0.01)
-        self.ax.set_ylabel(f"{unit}", x=-0.005, y=0.46)
-        self.ax.yaxis.set_label_position("right")
-        self.ax.xaxis.set_label_position("top")
-        self.ax.plot(ch_data[0], ch_data[1], color=color[channel], label=f"CH{channel}")
-        self.ax.grid()
-        self.ax.legend()
-        self.canvas.draw()
-        plt.subplots_adjust(left=0.2, bottom=0.2)
-        return
+        channel = None
+
+        if self.plot1.get() == True and self.plot2.get() == False:
+            channel = 1
+
+        if self.plot2.get() == True and self.plot1.get() == False:
+            channel = 2
+
+        if channel != None:
+            self.ax.clear()
+            color = {1: "yellow", 2: "blue"}
+            ch_data = self.scope.ReadScaledSampleData(channel)
+            unit = getattr(self.scope, f"CH{channel}").volts_per_div_unit
+            self.ax.set_xlabel(f"{self.scope.timebase_unit}", x=0.9, y=-0.01)
+            self.ax.set_ylabel(f"{unit}", x=-0.005, y=0.46)
+            self.ax.yaxis.set_label_position("right")
+            self.ax.xaxis.set_label_position("top")
+            self.ax.plot(
+                ch_data[0], ch_data[1], color=color[channel], label=f"CH{channel}"
+            )
+            self.ax.set_ylim(min(ch_data[1]) / 2, max(ch_data[1]) * 2)
+            self.ax.grid()
+            self.ax.legend(loc="upper left")
+            self.canvas.draw()
+            plt.subplots_adjust(left=0.2, bottom=0.2)
+
+        else:
+            self.ax.clear()
 
     def screenshot(self):
 

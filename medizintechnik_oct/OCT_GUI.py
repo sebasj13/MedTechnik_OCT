@@ -75,13 +75,14 @@ class OCT_GUI:
         self.frame_right = MotorConnect(self.frame)
         self.seperator = tk.Canvas(self.frame, bg="black", height=300, width=2)
         self.frame_left.grid(row=0, column=0, sticky=tk.NW)
-        self.frame_right.grid(row=0, column=2, sticky=tk.NW)
+
         self.seperator.grid(row=0, column=1, sticky=tk.N)
 
         self.frame.grid(row=0)
 
         self.osziframe = OsziControl(self.frame)
         self.motorframe = MotorControl(self.frame)
+        self.motorframe.grid(row=0, column=2, sticky=tk.NW)
 
         self.oszi_connected = tk.DoubleVar(value=0)
         self.axial_motor_connected = tk.DoubleVar(value=0)
@@ -93,7 +94,9 @@ class OCT_GUI:
         self.axial_motor = None
         self.transversal_motor = None
 
-        self.watchdog = threading.Thread(target=self.connection_status()).start()
+        # self.watchdog = threading.Thread(
+        #    target=lambda: self.connection_status()
+        # ).start()
 
     def switch(self):
 

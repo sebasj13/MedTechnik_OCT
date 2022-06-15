@@ -18,8 +18,14 @@ class MotorControl(ttk.Frame):
         self.motor1label = ttk.Label(self, text="Axialer Motor")
         self.motor2label = ttk.Label(self, text="Transversaler Motor")
 
+        self.position1label = ttk.Label(self, text="Position:")
+        self.position2label = ttk.Label(self, text="Position:")
+
         self.motor1label.grid(pady=2, row=0, column=0, columnspan=2, sticky=tk.N)
         self.motor2label.grid(pady=2, row=0, column=2, columnspan=2, sticky=tk.N)
+
+        self.position1label.grid(pady=2, row=1, column=0, columnspan=2, sticky=tk.W)
+        self.position2label.grid(pady=2, row=1, column=2, columnspan=2, sticky=tk.W)
 
         self.home1 = ttk.Button(self, text="Home", command=lambda: self.home(1))
         self.jog1 = ttk.Button(self, text="Ausfahren", command=lambda: self.jog(1, 1))
@@ -32,12 +38,12 @@ class MotorControl(ttk.Frame):
             self, text="Anfahren  [mm]:", command=lambda: self.move_to(1)
         )
 
-        self.home1.grid(pady=2, row=1, column=0, columnspan=2, sticky=tk.N)
-        self.jog1.grid(pady=2, row=2, column=0, columnspan=2, sticky=tk.N)
-        self.jogback1.grid(pady=2, row=3, column=0, columnspan=2, sticky=tk.N)
-        self.stop1.grid(pady=2, row=4, column=0, columnspan=2, sticky=tk.N)
-        self.motor1entry.grid(pady=2, row=5, column=1, sticky=tk.W)
-        self.motor1move.grid(pady=2, row=5, column=0, sticky=tk.E)
+        self.home1.grid(pady=2, row=2, column=0, columnspan=2, sticky=tk.N)
+        self.jog1.grid(pady=2, row=3, column=0, columnspan=2, sticky=tk.N)
+        self.jogback1.grid(pady=2, row=4, column=0, columnspan=2, sticky=tk.N)
+        self.stop1.grid(pady=2, row=5, column=0, columnspan=2, sticky=tk.N)
+        self.motor1entry.grid(pady=2, row=6, column=1, sticky=tk.W)
+        self.motor1move.grid(pady=2, row=6, column=0, sticky=tk.E)
 
         self.home2 = ttk.Button(self, text="Home", command=lambda: self.home(2))
         self.jog2 = ttk.Button(self, text="Ausfahren", command=lambda: self.jog(2, 1))
@@ -50,48 +56,48 @@ class MotorControl(ttk.Frame):
             self, text="Anfahren [mm]:", command=lambda: self.move_to(2)
         )
 
-        self.home2.grid(pady=2, row=1, column=2, columnspan=2, sticky=tk.N)
-        self.jog2.grid(pady=2, row=2, column=2, columnspan=2, sticky=tk.N)
-        self.jogback2.grid(pady=2, row=3, column=2, columnspan=2, sticky=tk.N)
-        self.stop2.grid(pady=2, row=4, column=2, columnspan=2, sticky=tk.N)
-        self.motor2entry.grid(pady=2, row=5, column=3, sticky=tk.W)
-        self.motor2move.grid(pady=2, row=5, column=2, sticky=tk.E)
+        self.home2.grid(pady=2, row=2, column=2, columnspan=2, sticky=tk.N)
+        self.jog2.grid(pady=2, row=3, column=2, columnspan=2, sticky=tk.N)
+        self.jogback2.grid(pady=2, row=4, column=2, columnspan=2, sticky=tk.N)
+        self.stop2.grid(pady=2, row=5, column=2, columnspan=2, sticky=tk.N)
+        self.motor2entry.grid(pady=2, row=6, column=3, sticky=tk.W)
+        self.motor2move.grid(pady=2, row=6, column=2, sticky=tk.E)
 
         self.seperator = tk.Canvas(self, bg="black", height=2, width=390)
-        self.seperator.grid(row=6, column=0, columnspan=4, pady=(20, 0))
+        self.seperator.grid(row=7, column=0, columnspan=4)
 
         self.rowlabel = ttk.Label(self, text="Zeilen:")
         self.rowsteplabel = ttk.Label(self, text="Schrittweite [mm]:")
         self.collabel = ttk.Label(self, text="Spalten:")
         self.colsteplabel = ttk.Label(self, text="Schrittweite [mm]:")
 
-        self.rowlabel.grid(sticky=tk.N, row=7, column=0)
-        self.rowsteplabel.grid(sticky=tk.N, row=7, column=1)
-        self.collabel.grid(sticky=tk.N, row=7, column=2)
-        self.colsteplabel.grid(sticky=tk.N, row=7, column=3)
+        self.rowlabel.grid(sticky=tk.N, row=8, column=0)
+        self.rowsteplabel.grid(sticky=tk.N, row=8, column=1)
+        self.collabel.grid(sticky=tk.N, row=8, column=2)
+        self.colsteplabel.grid(sticky=tk.N, row=8, column=3)
 
         self.rowentry = ttk.Entry(self, width=9)
         self.rowstepentry = ttk.Entry(self, width=9)
         self.colentry = ttk.Entry(self, width=9)
         self.colstepentry = ttk.Entry(self, width=9)
 
-        self.rowentry.grid(sticky=tk.N, row=8, column=0)
-        self.rowstepentry.grid(sticky=tk.N, row=8, column=1)
-        self.colentry.grid(sticky=tk.N, row=8, column=2)
-        self.colstepentry.grid(sticky=tk.N, row=8, column=3)
+        self.rowentry.grid(sticky=tk.N, row=9, column=0)
+        self.rowstepentry.grid(sticky=tk.N, row=9, column=1)
+        self.colentry.grid(sticky=tk.N, row=9, column=2)
+        self.colstepentry.grid(sticky=tk.N, row=9, column=3)
 
         self.savevar = tk.BooleanVar(self)
         self.savevar.set(False)
         self.savebutton = ttk.Checkbutton(
             self, variable=self.savevar, text="Speichern?", command=self.save
         )
-        self.savebutton.grid(row=9, column=2)
+        self.savebutton.grid(row=10, column=2)
         self.rampbutton = ttk.Button(
             self,
             text="Raster",
-            command=lambda: threading.Thread(target=self.ramp).start(),
+            command=lambda: threading.Thread(target=lambda: self.ramp).start(),
         )
-        self.rampbutton.grid(sticky=tk.N, row=9, columnspan=2, column=0, pady=10)
+        self.rampbutton.grid(sticky=tk.N, row=10, columnspan=2, column=0, pady=10)
         self.channelvar = tk.BooleanVar(self)
         self.channelvar.set(False)
         self.channeldict = {False: 1, True: 2}
@@ -100,7 +106,22 @@ class MotorControl(ttk.Frame):
         self.channelbutton = ttk.Button(
             self, text=self.channeltext.get(), command=self.channel
         )
-        self.channelbutton.grid(row=9, column=3)
+        self.channelbutton.grid(row=10, column=3)
+
+        self.after(250, lambda: threading.Thread(target=self.position).start())
+
+    def position(self):
+        try:
+            self.position1label.configure(
+                text=f"Position: {float(self.parent.axial_motor.get_position())/1000:4.3f} mm"
+            )
+            self.position1label.configure(
+                text=f"Position: {float(self.parent.transversal_motor.get_position())/1000:4.3f} mm"
+            )
+        except Exception:
+            pass
+        finally:
+            self.after(250, lambda: threading.Thread(target=self.position).start())
 
     def save(self):
         if self.parent.osziframe.scope == None:
