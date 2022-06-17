@@ -75,14 +75,14 @@ class OCT_GUI:
         self.frame_right = MotorConnect(self.frame)
         self.seperator = tk.Canvas(self.frame, bg="black", height=300, width=2)
         self.frame_left.grid(row=0, column=0, sticky=tk.NW)
-
+        self.frame_right.grid(row=0, column=2, sticky=tk.NW)
         self.seperator.grid(row=0, column=1, sticky=tk.N)
 
         self.frame.grid(row=0)
 
         self.osziframe = OsziControl(self.frame)
         self.motorframe = MotorControl(self.frame)
-        self.motorframe.grid(row=0, column=2, sticky=tk.NW)
+        # self.motorframe.grid(row=0, column=2, sticky=tk.NW)
 
         self.oszi_connected = tk.DoubleVar(value=0)
         self.axial_motor_connected = tk.DoubleVar(value=0)
@@ -94,9 +94,9 @@ class OCT_GUI:
         self.axial_motor = None
         self.transversal_motor = None
 
-        # self.watchdog = threading.Thread(
-        #    target=lambda: self.connection_status()
-        # ).start()
+        self.watchdog = threading.Thread(
+            target=lambda: self.connection_status()
+        ).start()
 
     def switch(self):
 
@@ -119,8 +119,8 @@ class OCT_GUI:
                 if isinstance(widget, ttk.Button):
                     widget.configure(state=statedict[state])
 
-        posentry = self.motorframe.grid_slaves(row=8)[2 - columndict[column]]
-        stepentry = self.motorframe.grid_slaves(row=8)[3 - columndict[column]]
+        posentry = self.motorframe.grid_slaves(row=9)[2 - columndict[column]]
+        stepentry = self.motorframe.grid_slaves(row=9)[3 - columndict[column]]
         if state == False:
             posentry.delete(0, tk.END)
             stepentry.delete(0, tk.END)
@@ -369,7 +369,9 @@ class OCT_GUI:
     def on_closing(self):
         if messagebox.askokcancel("Schließen", "Fenster schließen?"):
             try:
+                self.axial_motor.move_to(0)
                 self.axial_motor.close()
+                self.transversal_motor.move_to(0)
                 self.transversal_motor.close()
             except Exception:
                 pass

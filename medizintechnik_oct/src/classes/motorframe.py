@@ -95,7 +95,7 @@ class MotorControl(ttk.Frame):
         self.rampbutton = ttk.Button(
             self,
             text="Raster",
-            command=lambda: threading.Thread(target=lambda: self.ramp).start(),
+            command=lambda: threading.Thread(target=self.ramp).start(),
         )
         self.rampbutton.grid(sticky=tk.N, row=10, columnspan=2, column=0, pady=10)
         self.channelvar = tk.BooleanVar(self)
@@ -108,20 +108,22 @@ class MotorControl(ttk.Frame):
         )
         self.channelbutton.grid(row=10, column=3)
 
-        self.after(250, lambda: threading.Thread(target=self.position).start())
+        threading.Thread(target=self.position).start()
 
     def position(self):
+
         try:
             self.position1label.configure(
-                text=f"Position: {float(self.parent.axial_motor.get_position())/1000:4.3f} mm"
+                text=f"Position: {float(self.parent.axial_motor.get_position())*1000:4.3f} mm"
             )
-            self.position1label.configure(
-                text=f"Position: {float(self.parent.transversal_motor.get_position())/1000:4.3f} mm"
+            self.position2label.configure(
+                text=f"Position: {float(self.parent.transversal_motor.get_position())*1000:4.3f} mm"
             )
+
         except Exception:
             pass
         finally:
-            self.after(250, lambda: threading.Thread(target=self.position).start())
+            self.after(100, lambda: threading.Thread(target=self.position).start())
 
     def save(self):
         if self.parent.osziframe.scope == None:
