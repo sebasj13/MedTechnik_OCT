@@ -228,12 +228,14 @@ class MotorControl(ttk.Frame):
                         )
                         np.savetxt(
                             os.path.join(
-                                folder_selected, f"{rows}x{cols}_Rasterscan_{i}.txt"
+                                folder_selected,
+                                f"Rasterscan_Spalte_{int(1000*transversal[i]+1)}_Zeile_{int(1000*axial[i]+1)}.txt",
                             ),
                             np.transpose([data[0], data[1]]),
                             fmt="%10.5f",
                             header=header,
                         )
+
                 except Exception as e:
                     pass
                 self.parent.statusbar.pb["value"] += 100 / len(axial)

@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="medizintechnik_oct",
-    version="1.0.2",
+    name="medizintechnik_ oct",
+    version="1.1",
     author="Sebastian Schäfer",
     author_email="sebastian.schaefer@student.uni-halle.de",
     description="Steuersoftware zum Versuch 'OCT' im Medizintechnik-Praktikum der MLU Halle-Wittenberg",
